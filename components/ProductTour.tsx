@@ -18,6 +18,7 @@ interface ProductTourProps {
 export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const [cardRect, setCardRect] = useState<DOMRect | null>(null);
   const cardRef = useRef<HTMLDivElement>(null);
 
   // Preload Character Image
@@ -40,7 +41,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
   const step = steps[currentStep];
   const isCentered = step?.targetId === 'center';
 
-  // Find target element and calculate position (Only for non-centered steps)
+  // 1. Measure Target
   useLayoutEffect(() => {
     if (!isOpen || isCentered) return;
 
@@ -48,20 +49,16 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       const element = document.getElementById(step.targetId);
       
       if (element) {
-        // Use scrollIntoView with 'center' to focus.
-        // We add a small delay to ensure layout is stable.
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        
-        const rect = element.getBoundingClientRect();
-        setTargetRect(rect);
+        setTargetRect(element.getBoundingClientRect());
       }
     };
 
     updatePosition();
     window.addEventListener('resize', updatePosition);
     window.addEventListener('scroll', updatePosition);
-
-    const timeout = setTimeout(updatePosition, 100);
+    // Double check after scroll animation
+    const timeout = setTimeout(updatePosition, 400);
 
     return () => {
       window.removeEventListener('resize', updatePosition);
@@ -70,8 +67,16 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
     };
   }, [currentStep, isOpen, step, isCentered]); 
 
+  // 2. Measure Card (after render) to adjust position
+  useLayoutEffect(() => {
+      if(cardRef.current) {
+          setCardRect(cardRef.current.getBoundingClientRect());
+      }
+  }, [targetRect, currentStep, isCentered]);
+
+
   if (!isOpen) return null;
-  // If not centered and no rect yet, don't render (wait for effect)
+  // If not centered and no rect yet, don't render target overlay yet
   if (!isCentered && !targetRect) return null;
 
   const isLastStep = currentStep === steps.length - 1;
@@ -88,37 +93,63 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
     setCurrentStep(prev => Math.max(0, prev - 1));
   };
 
-  // Render Welcome Screen (Character Mode)
+  // --- WELCOME SCREEN (ANIMATED) ---
   if (isCentered) {
       return (
           <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm transition-all duration-300">
+              <style>{`
+                  @keyframes float {
+                      0% { transform: translateY(0px); }
+                      50% { transform: translateY(-15px); }
+                      100% { transform: translateY(0px); }
+                  }
+                  @keyframes popIn {
+                      0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+                      70% { opacity: 1; transform: scale(1.05); }
+                      100% { opacity: 1; transform: scale(1); }
+                  }
+                  @keyframes glow {
+                      0% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+                      50% { box-shadow: 0 0 50px rgba(255,255,255,0.3); }
+                      100% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
+                  }
+              `}</style>
               <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center p-6">
                   
-                  {/* Speech Bubble */}
-                  <div className="relative bg-white p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-md text-center mb-6 animate-in fade-in zoom-in-95 slide-in-from-bottom-4 duration-700 delay-300 border-2 border-neutral-100">
+                  {/* Background Glow */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/20 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
+
+                  {/* Speech Bubble with Pop Animation */}
+                  <div 
+                    className="relative bg-white p-8 rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] max-w-md text-center mb-6 border-4 border-white/50"
+                    style={{ animation: 'popIn 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) forwards' }}
+                  >
                       {/* Tail */}
-                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 transform border-b-2 border-r-2 border-neutral-100"></div>
+                      <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 transform border-b-4 border-r-4 border-white/50"></div>
                       
-                      <h3 className="text-2xl font-black text-brand mb-3 tracking-tight">{step.title}</h3>
-                      <p className="text-lg text-neutral-800 font-medium leading-relaxed mb-6">
+                      <h3 className="text-3xl font-black text-brand mb-3 tracking-tight drop-shadow-sm">{step.title}</h3>
+                      <p className="text-lg text-neutral-800 font-bold leading-relaxed mb-6">
                           {step.content}
                       </p>
                       
                       <button 
                           onClick={handleNext}
-                          className="w-full sm:w-auto px-8 py-3 bg-brand hover:bg-brand-dark text-white rounded-xl font-bold text-lg transition-all transform hover:scale-105 shadow-lg shadow-brand/30 flex items-center justify-center gap-2 mx-auto"
+                          className="w-full sm:w-auto px-8 py-4 bg-brand hover:bg-brand-dark text-white rounded-2xl font-black text-xl transition-all transform hover:scale-105 shadow-xl shadow-brand/40 flex items-center justify-center gap-2 mx-auto active:scale-95"
                       >
                           Começar
-                          <ChevronRight className="w-5 h-5" />
+                          <ChevronRight className="w-6 h-6" />
                       </button>
                   </div>
 
-                  {/* Character Image - No Frame */}
-                  <div className="relative z-10 h-[45vh] min-h-[300px] animate-in slide-in-from-bottom-20 fade-in duration-1000 ease-out">
+                  {/* Character Image - Floating Animation */}
+                  <div 
+                    className="relative z-10 h-[45vh] min-h-[300px]"
+                    style={{ animation: 'float 4s ease-in-out infinite' }}
+                  >
                        <img 
                           src="https://i.imgur.com/8Q8N7mF.png" 
                           alt="GreenBack" 
-                          className="h-full w-auto object-contain drop-shadow-2xl"
+                          className="h-full w-auto object-contain drop-shadow-2xl filter contrast-110"
                           loading="eager"
                        />
                   </div>
@@ -127,40 +158,42 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       );
   }
 
-  // Spotlight Mode Calculation
-  const CARD_WIDTH = 384; // max-w-sm
-  const CARD_EST_HEIGHT = 280; // approximate
-  const SPACING = 16;
-  const VIEWPORT_PADDING = 10;
+  // --- SPOTLIGHT MODE (SMART POSITIONING) ---
 
-  // Horizontal Positioning
+  const CARD_WIDTH = 384; 
+  const SPACING = 16;
+  const VIEWPORT_PADDING = 16;
+
+  // 1. Horizontal Calculation
   let left = targetRect!.left + (targetRect!.width / 2) - (CARD_WIDTH / 2); 
-  // Clamp horizontal
+  // Clamp to viewport
   if (left < VIEWPORT_PADDING) left = VIEWPORT_PADDING;
   if (left + CARD_WIDTH > window.innerWidth - VIEWPORT_PADDING) {
       left = window.innerWidth - CARD_WIDTH - VIEWPORT_PADDING;
   }
+
+  // 2. Vertical Calculation (Smart Collision)
+  // Default: Place below
+  let top = targetRect!.bottom + SPACING;
+  const cardHeight = cardRect ? cardRect.height : 300; // Estimated or real
+
+  // Check if it fits below
+  const fitsBelow = (top + cardHeight) <= (window.innerHeight - VIEWPORT_PADDING);
   
-  // Vertical Positioning Logic
-  const spaceBelow = window.innerHeight - targetRect!.bottom;
-  const spaceAbove = targetRect!.top;
-  
-  // Decide placement: 'bottom' or 'top'
-  // Prefer bottom if there is enough space (approx 300px) OR if there is more space below than above
-  const placeBottom = spaceBelow >= CARD_EST_HEIGHT || spaceBelow > spaceAbove;
-  
-  let verticalStyle: React.CSSProperties = {};
-  
-  if (placeBottom) {
-      // Place Below
-      verticalStyle = { top: targetRect!.bottom + SPACING };
-  } else {
-      // Place Above (Use 'bottom' property to let it grow upwards)
-      // bottom distance from viewport bottom = viewport height - target top + spacing
-      verticalStyle = { bottom: window.innerHeight - targetRect!.top + SPACING };
+  if (!fitsBelow) {
+      // Doesn't fit below. Try placing ABOVE.
+      const topAbove = targetRect!.top - cardHeight - SPACING;
+      
+      // Check if fits above (considering standard header height ~70px)
+      if (topAbove >= 70) {
+          top = topAbove;
+      } else {
+          // Fits NEITHER above nor below (Element is huge or screen is tiny).
+          // Strategy: Clamp to bottom of viewport.
+          top = window.innerHeight - cardHeight - VIEWPORT_PADDING;
+      }
   }
 
-  // Render Standard Step Card
   return (
     <>
       {/* Spotlight Overlay */}
@@ -179,16 +212,16 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       {/* Floating Card */}
       <div 
         ref={cardRef}
-        className="fixed z-[100] flex flex-col"
+        className="fixed z-[100] flex flex-col transition-all duration-500 ease-out"
         style={{ 
             left, 
+            top,
             width: '384px',
             maxWidth: `calc(100vw - ${VIEWPORT_PADDING * 2}px)`,
-            ...verticalStyle
         }}
       >
         <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto border border-neutral-100 dark:border-neutral-700 max-h-[80vh] flex-shrink-0">
-            {/* Header - White Text on Brand Color */}
+            {/* Header */}
             <div className="bg-brand p-5 rounded-t-2xl border-b border-brand/10 flex-shrink-0">
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-xl font-bold text-white">{step.title}</h3>
@@ -198,16 +231,16 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                 </div>
             </div>
 
-            {/* Content (Scrollable if needed) */}
-            <div className="p-6 pt-4 overflow-y-auto">
+            {/* Content */}
+            <div className="p-6 pt-4 overflow-y-auto custom-scrollbar">
                 <p className="text-neutral-700 dark:text-neutral-200 text-sm leading-relaxed mb-6 font-medium">
                     {step.content}
                 </p>
 
-                <div className="flex items-center justify-between mt-2 pt-2">
+                <div className="flex items-center justify-between mt-2 pt-2 border-t border-neutral-100 dark:border-neutral-700/50">
                     <button 
                         onClick={onClose}
-                        className="text-xs font-bold text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
+                        className="text-xs font-bold text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors px-2 py-1"
                     >
                         Pular
                     </button>
@@ -216,14 +249,14 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                         {currentStep > 0 && (
                             <button 
                                 onClick={handlePrev}
-                                className="p-2 rounded-full hover:bg-neutral-100 dark:hover:bg-neutral-700 text-neutral-500 transition-colors"
+                                className="p-2 rounded-lg bg-neutral-100 dark:bg-neutral-700 hover:bg-neutral-200 dark:hover:bg-neutral-600 text-neutral-600 dark:text-neutral-300 transition-colors"
                             >
                                 <ChevronLeft className="w-5 h-5" />
                             </button>
                         )}
                         <button 
                             onClick={handleNext}
-                            className="flex items-center gap-2 px-6 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg"
+                            className="flex items-center gap-2 px-6 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform active:scale-95"
                         >
                             {isLastStep ? 'Concluir' : 'Próximo'}
                             {isLastStep ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
