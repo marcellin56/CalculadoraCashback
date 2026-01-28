@@ -5,7 +5,7 @@ import {
   AVIATOR_TIERS, AVIATOR_MIN_CASHBACK, AVIATOR_MAX_CASHBACK, AVIATOR_CALC_LIMIT_BASE,
   VERA_DAILY_TIERS, VERA_WEEKLY_MIN_CASHBACK, VERA_DAILY_CALC_LIMIT_BASE
 } from '../constants';
-import { CashbackMode, CashbackResult, Platform } from '../types';
+import { CashbackMode, Platform, CashbackResult, Tier } from '../types';
 
 export const calculateCashback = (
   lossAmount: number, 
@@ -25,7 +25,7 @@ export const calculateCashback = (
   }
 
   // Determine Tiers and Limits based on mode and platform
-  let tiers, minCashback, maxCashback, baseLimit;
+  let tiers: Tier[], minCashback: number, maxCashback: number, baseLimit: number;
 
   switch (mode) {
     case 'weekly':
@@ -96,13 +96,13 @@ export const calculateCashback = (
   };
 };
 
-export const formatCurrency = (val: number) => {
+export const formatCurrency = (val: number): string => {
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
     currency: 'BRL'
   }).format(val);
 };
 
-export const formatPercent = (val: number) => {
+export const formatPercent = (val: number): string => {
   return `${(val * 100).toFixed(0)}%`;
 };

@@ -42,3 +42,28 @@ export interface PlatformConfig {
     };
   }
 }
+
+// Batch Processing Types
+export interface ExcelRow {
+  Date?: string | number;
+  Data?: string | number;
+  Game?: string;
+  Jogo?: string;
+  GGR?: number;
+  PL?: number;
+  [key: string]: any;
+}
+
+export interface ProcessedEntry {
+  date: string;
+  mode: CashbackMode;
+  loss: number; // Positive value implies player loss
+  cashback: number;
+  percent: number;
+}
+
+export interface BatchReport {
+  summary: ProcessedEntry[];
+  totalCashback: number;
+  detailsByMode: Record<CashbackMode, number>;
+}

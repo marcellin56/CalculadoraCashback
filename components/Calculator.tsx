@@ -1,16 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { CalculatorState, CashbackMode, CashbackResult, Platform } from '../types';
 import { calculateCashback, formatCurrency, formatPercent } from '../services/cashbackService';
 import { Calculator as CalcIcon, DollarSign, Wallet, Scale, ArrowRight } from 'lucide-react';
 import { PLATFORMS } from '../constants';
+import { CashbackMode, Platform, CashbackResult } from '../types';
 
 interface CalculatorProps {
   mode: CashbackMode;
   platform: Platform;
 }
 
+interface ValuesState {
+  lossAmount: string;
+}
+
 export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
-  const [values, setValues] = useState<CalculatorState>({ lossAmount: '' });
+  const [values, setValues] = useState<ValuesState>({ lossAmount: '' });
   const [receivedInput, setReceivedInput] = useState<string>('');
   const [result, setResult] = useState<CashbackResult | null>(null);
   const config = PLATFORMS[platform];

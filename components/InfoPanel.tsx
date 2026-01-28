@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
 import { ChevronDown, ChevronUp, AlertCircle, Calendar, Clock, Ban, Trophy } from 'lucide-react';
-import { CashbackMode, Platform } from '../types';
 import { 
     EXCLUDED_GAMES_DAILY, EXCLUDED_GAMES_WEEKLY, EXCLUDED_GAMES_SPORTS, EXCLUDED_GAMES_AVIATOR, 
     VERA_EXCLUDED_GAMES_WEEKLY, VERA_EXCLUDED_GAMES_DAILY,
     PLATFORMS 
 } from '../constants';
+import { CashbackMode, Platform } from '../types';
 
 interface InfoPanelProps {
   mode: CashbackMode;

@@ -6,7 +6,7 @@ import { PLATFORMS } from './constants';
 import { Moon, Sun, Dice5, CalendarDays, Trophy, Layers, Check, Plane } from 'lucide-react';
 
 const App: React.FC = () => {
-  const [darkMode, setDarkMode] = useState(true);
+  const [darkMode, setDarkMode] = useState<boolean>(true);
   const [platform, setPlatform] = useState<Platform>('7K');
   const [mode, setMode] = useState<CashbackMode>('weekly');
   const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
@@ -152,35 +152,45 @@ const App: React.FC = () => {
       {/* Main Content */}
       <main className="max-w-4xl mx-auto px-4 mt-8">
         
+        {/* Intro Text */}
+        <div className="mb-8 text-center">
+           <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
+             {getTitle()}
+           </h2>
+           <p className="text-neutral-500 dark:text-neutral-400">
+             {getSubTitle()}
+           </p>
+        </div>
+
         {/* Navigation Tabs */}
         <div className={`grid gap-1 p-1 bg-white dark:bg-neutral-800 rounded-xl mb-8 border border-neutral-200 dark:border-neutral-700 shadow-sm ${getGridCols()}`} style={{gridTemplateColumns: `repeat(${[true, true, config.hasSports, config.hasAviator].filter(Boolean).length}, minmax(0, 1fr))`}}>
-          <button
+        <button
             onClick={() => setMode('weekly')}
             className={`flex items-center justify-center gap-2 py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 ${
-              mode === 'weekly'
+            mode === 'weekly'
                 ? `bg-brand ${config.textOnBrand} shadow-md`
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
             }`}
-          >
+        >
             <CalendarDays className="w-4 h-4" />
             <span className="hidden sm:inline">Cassino (Semanal)</span>
             <span className="sm:hidden">Cassino</span>
-          </button>
-          
-          <button
+        </button>
+        
+        <button
             onClick={() => setMode('daily')}
             className={`flex items-center justify-center gap-2 py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 ${
-              mode === 'daily'
+            mode === 'daily'
                 ? `bg-brand ${config.textOnBrand} shadow-md`
                 : 'text-neutral-600 dark:text-neutral-400 hover:bg-neutral-50 dark:hover:bg-neutral-700/50'
             }`}
-          >
+        >
             <Dice5 className="w-4 h-4" />
             <span className="hidden sm:inline">Slots (Diário)</span>
             <span className="sm:hidden">Slots</span>
-          </button>
+        </button>
 
-          {config.hasSports && (
+        {config.hasSports && (
             <button
                 onClick={() => setMode('sports')}
                 className={`flex items-center justify-center gap-2 py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 ${
@@ -193,9 +203,9 @@ const App: React.FC = () => {
                 <span className="hidden sm:inline">Esportivo (Semanal)</span>
                 <span className="sm:hidden">Sport</span>
             </button>
-          )}
+        )}
 
-          {config.hasAviator && (
+        {config.hasAviator && (
             <button
                 onClick={() => setMode('aviator')}
                 className={`flex items-center justify-center gap-2 py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 ${
@@ -208,17 +218,7 @@ const App: React.FC = () => {
                 <span className="hidden sm:inline">Aviator (Diário)</span>
                 <span className="sm:hidden">Aviator</span>
             </button>
-          )}
-        </div>
-
-        {/* Intro Text */}
-        <div className="mb-8 text-center">
-           <h2 className="text-2xl md:text-3xl font-bold text-neutral-900 dark:text-white mb-2">
-             {getTitle()}
-           </h2>
-           <p className="text-neutral-500 dark:text-neutral-400">
-             {getSubTitle()}
-           </p>
+        )}
         </div>
 
         {/* Calculator */}
