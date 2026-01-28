@@ -7,6 +7,14 @@ import {
 } from '../constants';
 import { CashbackMode, Platform, CashbackResult, Tier } from '../types';
 
+// Helper for truncation without rounding (e.g. 1.9994 -> 1.99)
+const truncateToTwoDecimals = (val: number): number => {
+    // 1. Handle precision issues (e.g. 1.15 -> 1.1499999) using toFixed(10)
+    // 2. Multiply by 100, Floor, Divide by 100
+    const fixed = parseFloat(val.toFixed(10));
+    return Math.floor(fixed * 100) / 100;
+};
+
 export const calculateCashback = (
   lossAmount: number, 
   mode: CashbackMode,
@@ -84,6 +92,10 @@ export const calculateCashback = (
   const calculationBase = Math.min(lossAmount, baseLimit);
   let cashback = calculationBase * tier.percent;
 
+  // Apply strict truncation logic (No rounding)
+  // Example: 1.9994 becomes 1.99
+  cashback = truncateToTwoDecimals(cashback);
+
   // Clamp constraints
   if (cashback < minCashback) cashback = 0;
   if (cashback > maxCashback) cashback = maxCashback;
@@ -97,10 +109,14 @@ export const calculateCashback = (
 };
 
 export const formatCurrency = (val: number): string => {
+  // Truncate to 2 decimal places before formatting to prevent visual rounding up
+  const truncated = truncateToTwoDecimals(val);
   return new Intl.NumberFormat('pt-BR', {
     style: 'currency',
-    currency: 'BRL'
-  }).format(val);
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2 
+  }).format(truncated);
 };
 
 export const formatPercent = (val: number): string => {

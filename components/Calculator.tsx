@@ -27,7 +27,9 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
   }, [mode, platform]);
 
   useEffect(() => {
-    const loss = parseFloat(values.lossAmount) || 0;
+    // Normalize input by replacing comma with dot for calculation
+    const normalizedLoss = values.lossAmount.replace(',', '.');
+    const loss = parseFloat(normalizedLoss) || 0;
 
     if (loss > 0) {
       setResult(calculateCashback(loss, mode, platform));
@@ -38,15 +40,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    // Allow only numbers and decimals
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+    // Allow numbers and either a dot or a comma (but only one)
+    // Regex: Start, digits, optional group of (dot or comma AND digits), End.
+    if (value === '' || /^\d*([.,]\d*)?$/.test(value)) {
       setValues({ lossAmount: value });
     }
   };
 
   const handleReceivedChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    if (value === '' || /^\d*\.?\d*$/.test(value)) {
+    if (value === '' || /^\d*([.,]\d*)?$/.test(value)) {
       setReceivedInput(value);
     }
   };
@@ -72,8 +75,16 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
   };
 
   // Divergence Calculation
-  const receivedAmount = parseFloat(receivedInput) || 0;
-  const shouldCredit = result ? Math.max(0, result.cashbackAmount - receivedAmount) : 0;
+  // Normalize received input as well
+  const normalizedReceived = receivedInput.replace(',', '.');
+  const receivedAmount = parseFloat(normalizedReceived) || 0;
+  
+  // Floating point precision handling for difference
+  const diff = result ? result.cashbackAmount - receivedAmount : 0;
+  // Use high precision to capture exact difference without 2-decimal rounding
+  // Math.max(0, ...) ensures we don't show negative if they paid MORE than needed.
+  const shouldCredit = Math.max(0, parseFloat(diff.toFixed(6)));
+  
   const isDivergent = result && result.cashbackAmount > 0 && receivedInput !== '' && receivedAmount < result.cashbackAmount;
 
   return (
@@ -98,12 +109,12 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
                 inputMode="decimal"
                 value={values.lossAmount}
                 onChange={handleInputChange}
-                placeholder="0.00"
+                placeholder="0,00"
                 className="w-full pl-14 pr-4 py-4 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 focus:border-brand focus:ring-0 outline-none transition-all text-2xl font-bold text-neutral-800 dark:text-white placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
               />
             </div>
             <p className="mt-3 text-sm text-neutral-400 dark:text-neutral-500">
-              Insira o valor absoluto da perda do jogador (ex: 500.00).
+              Insira o valor absoluto da perda do jogador (ex: 500,00).
             </p>
           </div>
 
@@ -176,7 +187,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
                                   <input 
                                       type="text"
                                       inputMode="decimal"
-                                      placeholder="0.00"
+                                      placeholder="0,00"
                                       value={receivedInput}
                                       onChange={handleReceivedChange}
                                       className="w-full pl-9 pr-3 py-2 text-sm font-bold rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 focus:border-brand focus:ring-0 outline-none text-neutral-800 dark:text-white"
