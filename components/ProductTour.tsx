@@ -108,11 +108,6 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                       70% { opacity: 1; transform: scale(1.05); }
                       100% { opacity: 1; transform: scale(1); }
                   }
-                  @keyframes glow {
-                      0% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
-                      50% { box-shadow: 0 0 50px rgba(255,255,255,0.3); }
-                      100% { box-shadow: 0 0 20px rgba(255,255,255,0.1); }
-                  }
               `}</style>
               <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center p-6">
                   
@@ -176,6 +171,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
   // Default: Place below
   let top = targetRect!.bottom + SPACING;
   const cardHeight = cardRect ? cardRect.height : 300; // Estimated or real
+  let isPlacedBelow = true;
 
   // Check if it fits below
   const fitsBelow = (top + cardHeight) <= (window.innerHeight - VIEWPORT_PADDING);
@@ -187,10 +183,36 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       // Check if fits above (considering standard header height ~70px)
       if (topAbove >= 70) {
           top = topAbove;
+          isPlacedBelow = false;
       } else {
           // Fits NEITHER above nor below (Element is huge or screen is tiny).
           // Strategy: Clamp to bottom of viewport.
           top = window.innerHeight - cardHeight - VIEWPORT_PADDING;
+      }
+  }
+
+  // Calculate Connection Line Points
+  let connectionPath = '';
+  if (!isCentered && cardRect) {
+      const cardCenterX = left + (cardRect.width / 2);
+      const targetCenterX = targetRect!.left + (targetRect!.width / 2);
+      
+      if (isPlacedBelow) {
+          // From Target Bottom to Card Top
+          const startX = targetCenterX;
+          const startY = targetRect!.bottom;
+          const endX = cardCenterX;
+          const endY = top;
+          
+          connectionPath = `M ${startX} ${startY} C ${startX} ${startY + 20}, ${endX} ${endY - 20}, ${endX} ${endY}`;
+      } else {
+          // From Target Top to Card Bottom
+          const startX = targetCenterX;
+          const startY = targetRect!.top;
+          const endX = cardCenterX;
+          const endY = top + cardRect.height;
+          
+          connectionPath = `M ${startX} ${startY} C ${startX} ${startY - 20}, ${endX} ${endY + 20}, ${endX} ${endY}`;
       }
   }
 
@@ -200,14 +222,36 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       <div 
         className="fixed inset-0 z-[90] transition-all duration-300 ease-in-out pointer-events-none"
         style={{
-          boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75)`,
-          borderRadius: '8px',
+          boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 4px var(--brand-light)`, // Glow ring using brand-light
+          border: '2px solid var(--brand-default)', // Solid border using brand color
+          borderRadius: '12px', // Generic rounded corners for most UI elements
           top: targetRect!.top - 4,
           left: targetRect!.left - 4,
           width: targetRect!.width + 8,
           height: targetRect!.height + 8,
         }}
       />
+
+      {/* Connecting Line */}
+      {connectionPath && (
+          <svg className="fixed inset-0 z-[95] pointer-events-none w-full h-full">
+              <defs>
+                  <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                    <polygon points="0 0, 10 3.5, 0 7" fill="var(--brand-default)" />
+                  </marker>
+              </defs>
+              <path 
+                d={connectionPath} 
+                stroke="var(--brand-default)" 
+                strokeWidth="2" 
+                fill="none" 
+                strokeDasharray="4 2"
+                className="animate-pulse"
+                markerEnd="url(#arrowhead)"
+              />
+              <circle cx={targetRect!.left + (targetRect!.width / 2)} cy={isPlacedBelow ? targetRect!.bottom : targetRect!.top} r="3" fill="var(--brand-default)" />
+          </svg>
+      )}
 
       {/* Floating Card */}
       <div 
@@ -220,9 +264,9 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
             maxWidth: `calc(100vw - ${VIEWPORT_PADDING * 2}px)`,
         }}
       >
-        <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto border border-neutral-100 dark:border-neutral-700 max-h-[80vh] flex-shrink-0">
+        <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto border-2 border-brand max-h-[80vh] flex-shrink-0">
             {/* Header */}
-            <div className="bg-brand p-5 rounded-t-2xl border-b border-brand/10 flex-shrink-0">
+            <div className="p-5 rounded-t-xl border-b flex-shrink-0 bg-brand border-brand/10">
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-xl font-bold text-white">{step.title}</h3>
                    <span className="text-xs font-bold text-white uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
@@ -256,7 +300,7 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                         )}
                         <button 
                             onClick={handleNext}
-                            className="flex items-center gap-2 px-6 py-2 bg-brand hover:bg-brand-dark text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform active:scale-95"
+                            className="flex items-center gap-2 px-6 py-2 text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform active:scale-95 bg-brand hover:bg-brand-dark"
                         >
                             {isLastStep ? 'Concluir' : 'Próximo'}
                             {isLastStep ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
