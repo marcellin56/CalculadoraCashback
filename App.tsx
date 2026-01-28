@@ -21,12 +21,23 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
-  // Security: Block Inspect Element and Context Menu
+  // --- SECURITY: ANTI-DEBUG & ANTI-INSPECT ---
   useEffect(() => {
+    // 1. Disable Console Logs
+    // This prevents users from seeing logs if they do manage to open the console
+    const noop = () => {};
+    ['log', 'debug', 'info', 'warn', 'error', 'table', 'trace'].forEach((method) => {
+        // @ts-ignore
+        console[method] = noop;
+    });
+
+    // 2. Block Context Menu (Right Click)
     const handleContextMenu = (e: MouseEvent) => {
       e.preventDefault();
+      return false;
     };
 
+    // 3. Block Keyboard Shortcuts
     const handleKeyDown = (e: KeyboardEvent) => {
       // Block F12
       if (e.key === 'F12') {
@@ -34,7 +45,7 @@ const App: React.FC = () => {
         return;
       }
 
-      // Block Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+      // Block Ctrl+Shift+I, J, C (DevTools)
       if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
         e.preventDefault();
         return;
@@ -45,7 +56,28 @@ const App: React.FC = () => {
         e.preventDefault();
         return;
       }
+
+      // Block Ctrl+S (Save Page)
+      if (e.ctrlKey && e.key.toUpperCase() === 'S') {
+        e.preventDefault();
+        return;
+      }
+
+      // Block Ctrl+P (Print)
+      if (e.ctrlKey && e.key.toUpperCase() === 'P') {
+        e.preventDefault();
+        return;
+      }
     };
+
+    // 4. Debugger Trap (Anti-Analysis)
+    // This interval forces a 'debugger' breakpoint repeatedly.
+    // If DevTools is open, the browser will constantly pause here, freezing the page 
+    // and making it extremely annoying/impossible to inspect the elements or network.
+    const antiDebugInterval = setInterval(() => {
+        // We use the constructor method to make it harder to find via static text search
+        (function(){}).constructor('debugger')();
+    }, 500);
 
     document.addEventListener('contextmenu', handleContextMenu);
     document.addEventListener('keydown', handleKeyDown);
@@ -53,6 +85,7 @@ const App: React.FC = () => {
     return () => {
       document.removeEventListener('contextmenu', handleContextMenu);
       document.removeEventListener('keydown', handleKeyDown);
+      clearInterval(antiDebugInterval);
     };
   }, []);
 

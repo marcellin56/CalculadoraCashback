@@ -39,6 +39,33 @@
         --brand-dark: #c2410c;
         --brand-light: #fdba74;
       }
+
+      /* Security Styles: Prevent selection and interaction intended for inspection */
+      body {
+        -webkit-user-select: none; /* Safari */
+        -ms-user-select: none; /* IE 10 and IE 11 */
+        user-select: none; /* Standard syntax */
+        -webkit-touch-callout: none; /* iOS Safari */
+      }
+
+      img {
+        -webkit-user-drag: none;
+        -khtml-user-drag: none;
+        -moz-user-drag: none;
+        -o-user-drag: none;
+        user-drag: none;
+        pointer-events: none; /* Prevent right click on images specifically */
+      }
+      
+      /* Re-enable pointer events for buttons/inputs but keep selection off */
+      button, input, a {
+        pointer-events: auto;
+      }
+      
+      input {
+        user-select: text; /* Allow typing in inputs */
+        -webkit-user-select: text;
+      }
     </style>
   <script type="importmap">
 {
@@ -54,7 +81,7 @@
 }
 </script>
 </head>
-  <body class="bg-gray-100 dark:bg-neutral-900 transition-colors duration-300">
+  <body class="bg-gray-100 dark:bg-neutral-900 transition-colors duration-300" oncontextmenu="return false;">
     <div id="root"></div>
     <script type="module" src="./index.tsx"></script>
   </body>
