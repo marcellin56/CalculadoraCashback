@@ -86,7 +86,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
             Dados do Jogador
           </h2>
           
-          <div>
+          <div id="tour-input-loss">
             <label className="block text-base font-medium text-neutral-600 dark:text-neutral-400 mb-3">
               Saldo Negativo (Prejuízo Apurado)
             </label>
@@ -119,7 +119,7 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
       </div>
 
       {/* Results Section */}
-      <div className="space-y-6">
+      <div className="space-y-6" id="tour-results-area">
          {result ? (
             <div className="flex flex-col h-full bg-white dark:bg-neutral-800 p-8 rounded-2xl shadow-lg border-2 border-brand/20 relative overflow-hidden">
                 

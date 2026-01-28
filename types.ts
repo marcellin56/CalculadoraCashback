@@ -1,3 +1,4 @@
+
 export type CashbackMode = 'weekly' | 'daily' | 'sports' | 'aviator';
 export type Platform = '7K' | 'Cassino' | 'Vera';
 
@@ -22,7 +23,10 @@ export interface CalculatorState {
 export interface PlatformConfig {
   id: Platform;
   name: string;
-  logoUrl: string;
+  logoUrls: {
+    light: string; // Used in Light Mode
+    dark: string;  // Used in Dark Mode
+  };
   colors: {
     default: string;
     dark: string;

@@ -1,15 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { Calculator } from './components/Calculator';
 import { InfoPanel } from './components/InfoPanel';
+import { ProductTour, TourStep } from './components/ProductTour';
 import { CashbackMode, Platform } from './types';
 import { PLATFORMS } from './constants';
-import { Moon, Sun, Dice5, CalendarDays, Trophy, Layers, Check, Plane } from 'lucide-react';
+import { Moon, Sun, Dice5, CalendarDays, Trophy, Layers, Check, Plane, HelpCircle } from 'lucide-react';
 
 const App: React.FC = () => {
   const [darkMode, setDarkMode] = useState<boolean>(true);
   const [platform, setPlatform] = useState<Platform>('7K');
   const [mode, setMode] = useState<CashbackMode>('weekly');
   const [isPlatformMenuOpen, setIsPlatformMenuOpen] = useState(false);
+  const [showTour, setShowTour] = useState(false);
 
   useEffect(() => {
     if (darkMode) {
@@ -18,6 +20,21 @@ const App: React.FC = () => {
       document.documentElement.classList.remove('dark');
     }
   }, [darkMode]);
+
+  // Check Local Storage for Tour
+  useEffect(() => {
+    const hasSeenTour = localStorage.getItem('hasSeenCashbackTour');
+    if (!hasSeenTour) {
+      // Small delay to ensure render
+      const timer = setTimeout(() => setShowTour(true), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, []);
+
+  const handleTourComplete = () => {
+    setShowTour(false);
+    localStorage.setItem('hasSeenCashbackTour', 'true');
+  };
 
   // Apply Brand Colors
   useEffect(() => {
@@ -31,11 +48,9 @@ const App: React.FC = () => {
   // Handle mode switching when platform changes
   useEffect(() => {
       const config = PLATFORMS[platform];
-      // If current mode is sports and platform doesn't have sports, switch to weekly
       if (!config.hasSports && mode === 'sports') {
           setMode('weekly');
       }
-      // If current mode is aviator and platform doesn't have aviator, switch to weekly
       if (!config.hasAviator && mode === 'aviator') {
           setMode('weekly');
       }
@@ -71,16 +86,53 @@ const App: React.FC = () => {
     return `grid-cols-${cols}`;
   };
 
+  // Tour Steps Configuration
+  const tourSteps: TourStep[] = [
+    {
+      targetId: 'center',
+      title: 'Bem-vindo!',
+      content: 'Olá! Me chamo "GreenBack" e irei lhe mostrar como funciona a nossa ferramenta.'
+    },
+    {
+      targetId: 'tour-platform-selector',
+      title: 'Selecione a Plataforma',
+      content: 'Comece escolhendo a plataforma desejada (7K, Cassino ou Vera). Cada uma possui regras específicas de faixas, limites e dias de pagamento.'
+    },
+    {
+      targetId: 'tour-mode-tabs',
+      title: 'Escolha o Tipo de Cashback',
+      content: 'Alterne entre Cassino (Semanal), Slots (Diário), Esportes ou Aviator. O simulador atualizará automaticamente as tabelas de porcentagem.'
+    },
+    {
+      targetId: 'tour-input-loss',
+      title: 'Informe o Prejuízo',
+      content: 'Digite o "Saldo Negativo" (Valor Apostado - Ganho) do jogador aqui. Não se preocupe, o cálculo do benefício é instantâneo!'
+    },
+    {
+      targetId: 'tour-results-area',
+      title: 'Resultado e Divergência',
+      content: 'O valor devido aparecerá aqui. Se o jogador já recebeu algo parcialmente, você poderá inserir esse valor para calcular a diferença exata a pagar.'
+    }
+  ];
+
   return (
     <div className="min-h-screen pb-12 transition-colors duration-300">
       
+      {/* Product Tour Component */}
+      <ProductTour 
+        steps={tourSteps} 
+        isOpen={showTour} 
+        onClose={handleTourComplete} 
+        onComplete={handleTourComplete} 
+      />
+
       {/* Header */}
       <header className="sticky top-0 z-50 backdrop-blur-md bg-white/80 dark:bg-black/80 border-b border-neutral-200 dark:border-neutral-800 transition-colors duration-300">
         <div className="max-w-4xl mx-auto px-4 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="h-8 md:h-10 flex items-center justify-center">
                <img 
-                 src={config.logoUrl} 
+                 src={darkMode ? config.logoUrls.dark : config.logoUrls.light} 
                  alt={`${config.name} Logo`} 
                  className="h-full w-auto object-contain max-w-[140px]"
                />
@@ -93,8 +145,8 @@ const App: React.FC = () => {
           </div>
           
           <div className="flex items-center gap-3">
-             {/* Improved Platform Switcher */}
-             <div className="relative">
+             {/* Platform Switcher with Tour ID */}
+             <div className="relative" id="tour-platform-selector">
                 <button 
                   onClick={() => setIsPlatformMenuOpen(!isPlatformMenuOpen)}
                   onBlur={() => setTimeout(() => setIsPlatformMenuOpen(false), 200)}
@@ -124,7 +176,11 @@ const App: React.FC = () => {
                             >
                                 <span className="flex items-center gap-3">
                                    <div className="w-6 h-6 flex items-center justify-center bg-neutral-100 dark:bg-neutral-900 rounded p-0.5">
-                                      <img src={p.logoUrl} alt="" className="w-full h-full object-contain" />
+                                      <img 
+                                        src={darkMode ? p.logoUrls.dark : p.logoUrls.light} 
+                                        alt="" 
+                                        className="w-full h-full object-contain" 
+                                      />
                                    </div>
                                    {p.name}
                                 </span>
@@ -162,8 +218,8 @@ const App: React.FC = () => {
            </p>
         </div>
 
-        {/* Navigation Tabs */}
-        <div className={`grid gap-1 p-1 bg-white dark:bg-neutral-800 rounded-xl mb-8 border border-neutral-200 dark:border-neutral-700 shadow-sm ${getGridCols()}`} style={{gridTemplateColumns: `repeat(${[true, true, config.hasSports, config.hasAviator].filter(Boolean).length}, minmax(0, 1fr))`}}>
+        {/* Navigation Tabs with Tour ID */}
+        <div id="tour-mode-tabs" className={`grid gap-1 p-1 bg-white dark:bg-neutral-800 rounded-xl mb-8 border border-neutral-200 dark:border-neutral-700 shadow-sm ${getGridCols()}`} style={{gridTemplateColumns: `repeat(${[true, true, config.hasSports, config.hasAviator].filter(Boolean).length}, minmax(0, 1fr))`}}>
         <button
             onClick={() => setMode('weekly')}
             className={`flex items-center justify-center gap-2 py-3 rounded-lg text-xs md:text-sm font-bold transition-all duration-200 ${
@@ -229,8 +285,16 @@ const App: React.FC = () => {
 
       </main>
 
-      <footer className="max-w-4xl mx-auto px-4 mt-12 text-center text-xs text-neutral-400 dark:text-neutral-600">
-        <p>&copy; {new Date().getFullYear()} {config.name} Cashback Calculator. Ferramenta não oficial para simulação.</p>
+      <footer className="max-w-4xl mx-auto px-4 mt-12 mb-8 text-center text-xs text-neutral-400 dark:text-neutral-600">
+        <p className="mb-4">&copy; {new Date().getFullYear()} {config.name} Cashback Calculator. Ferramenta não oficial para simulação.</p>
+        
+        <button 
+            onClick={() => setShowTour(true)}
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-neutral-200 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 hover:text-brand dark:hover:text-brand hover:bg-neutral-300 dark:hover:bg-neutral-700 transition-colors text-xs font-semibold"
+        >
+            <HelpCircle className="w-3.5 h-3.5" />
+            Ver tutorial novamente
+        </button>
       </footer>
     </div>
   );

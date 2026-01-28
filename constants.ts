@@ -1,3 +1,4 @@
+
 import { Tier, PlatformConfig, Platform } from './types';
 
 // WEEKLY LIVE CASINO CONFIG (GENERIC / 7K / CASSINO)
@@ -98,7 +99,10 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   '7K': {
     id: '7K',
     name: '7K.bet',
-    logoUrl: 'https://static.7k.bet.br/deploy-b069a4860b710040d19c5e68e12da4d03edfddcb-f1f5881162dd0141d289/assets/images/logo.svg',
+    logoUrls: {
+      light: 'https://i.imgur.com/EEWIzwj.png',
+      dark: 'https://i.imgur.com/t5n650i.png'
+    },
     colors: {
       default: '#ACC90D', // 7K Green/Lime
       dark: '#859c0b',    // Darker Lime for hover/gradients
@@ -121,7 +125,10 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   'Cassino': {
     id: 'Cassino',
     name: 'Cassino.bet.br',
-    logoUrl: 'https://imagedelivery.net/BgH9d8bzsn4n0yijn4h7IQ/4b455706-eb40-453d-0658-532b576f7400/w=1200?quality=95&format=auto',
+    logoUrls: {
+      light: 'https://i.imgur.com/Le0QBjN.png',
+      dark: 'https://i.imgur.com/d1mr33O.png'
+    },
     colors: {
       default: '#0196E5', // Blue
       dark: '#017ac0',    // Dark Blue
@@ -144,7 +151,10 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   'Vera': {
     id: 'Vera',
     name: 'Vera.bet',
-    logoUrl: 'https://atendimento.vera.bet.br/hc/theming_assets/01JQVECC3WCCKQ4TFM37B3TH0Z',
+    logoUrls: {
+      light: 'https://i.imgur.com/bIjTiVJ.png',
+      dark: 'https://i.imgur.com/pcOxTap.png'
+    },
     colors: {
       default: '#06E05B', // Vera Green
       dark: '#05c04d',    // Darker Green
