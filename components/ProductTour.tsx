@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useLayoutEffect } from 'react';
+import React, { useState, useEffect, useLayoutEffect, useRef } from 'react';
 import { ChevronRight, ChevronLeft, Check } from 'lucide-react';
 
 export interface TourStep {
@@ -18,6 +18,7 @@ interface ProductTourProps {
 export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
 
   // Preload Character Image
   useEffect(() => {
@@ -47,7 +48,10 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       const element = document.getElementById(step.targetId);
       
       if (element) {
+        // Use scrollIntoView with 'center' to focus.
+        // We add a small delay to ensure layout is stable.
         element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        
         const rect = element.getBoundingClientRect();
         setTargetRect(rect);
       }
@@ -124,14 +128,36 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
   }
 
   // Spotlight Mode Calculation
-  let top = targetRect!.bottom + 20; 
-  let left = targetRect!.left + (targetRect!.width / 2) - 192; 
+  const CARD_WIDTH = 384; // max-w-sm
+  const CARD_EST_HEIGHT = 280; // approximate
+  const SPACING = 16;
+  const VIEWPORT_PADDING = 10;
 
-  if (left < 10) left = 10;
-  if (left + 384 > window.innerWidth) left = window.innerWidth - 394;
+  // Horizontal Positioning
+  let left = targetRect!.left + (targetRect!.width / 2) - (CARD_WIDTH / 2); 
+  // Clamp horizontal
+  if (left < VIEWPORT_PADDING) left = VIEWPORT_PADDING;
+  if (left + CARD_WIDTH > window.innerWidth - VIEWPORT_PADDING) {
+      left = window.innerWidth - CARD_WIDTH - VIEWPORT_PADDING;
+  }
   
-  if (top + 400 > window.innerHeight && targetRect!.top > 400) {
-      top = targetRect!.top - 350; 
+  // Vertical Positioning Logic
+  const spaceBelow = window.innerHeight - targetRect!.bottom;
+  const spaceAbove = targetRect!.top;
+  
+  // Decide placement: 'bottom' or 'top'
+  // Prefer bottom if there is enough space (approx 300px) OR if there is more space below than above
+  const placeBottom = spaceBelow >= CARD_EST_HEIGHT || spaceBelow > spaceAbove;
+  
+  let verticalStyle: React.CSSProperties = {};
+  
+  if (placeBottom) {
+      // Place Below
+      verticalStyle = { top: targetRect!.bottom + SPACING };
+  } else {
+      // Place Above (Use 'bottom' property to let it grow upwards)
+      // bottom distance from viewport bottom = viewport height - target top + spacing
+      verticalStyle = { bottom: window.innerHeight - targetRect!.top + SPACING };
   }
 
   // Render Standard Step Card
@@ -143,36 +169,42 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
         style={{
           boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75)`,
           borderRadius: '8px',
-          top: targetRect!.top - 5,
-          left: targetRect!.left - 5,
-          width: targetRect!.width + 10,
-          height: targetRect!.height + 10,
+          top: targetRect!.top - 4,
+          left: targetRect!.left - 4,
+          width: targetRect!.width + 8,
+          height: targetRect!.height + 8,
         }}
       />
 
       {/* Floating Card */}
       <div 
-        className="fixed z-[100]"
-        style={{ top, left, width: '384px' }}
+        ref={cardRef}
+        className="fixed z-[100] flex flex-col"
+        style={{ 
+            left, 
+            width: '384px',
+            maxWidth: `calc(100vw - ${VIEWPORT_PADDING * 2}px)`,
+            ...verticalStyle
+        }}
       >
-        <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-visible flex flex-col animate-in fade-in zoom-in-95 duration-300 max-w-sm w-full mx-auto border border-neutral-100 dark:border-neutral-700">
-            {/* Header */}
-            <div className="bg-brand/10 p-5 rounded-t-2xl border-b border-brand/10">
+        <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto border border-neutral-100 dark:border-neutral-700 max-h-[80vh] flex-shrink-0">
+            {/* Header - White Text on Brand Color */}
+            <div className="bg-brand p-5 rounded-t-2xl border-b border-brand/10 flex-shrink-0">
                 <div className="flex items-center justify-between mb-2">
-                   <h3 className="text-xl font-bold text-brand">{step.title}</h3>
-                   <span className="text-xs font-bold text-brand/60 uppercase tracking-wider bg-brand/10 px-2 py-1 rounded">
+                   <h3 className="text-xl font-bold text-white">{step.title}</h3>
+                   <span className="text-xs font-bold text-white uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
                         Passo {currentStep + 1} de {steps.length}
                    </span>
                 </div>
             </div>
 
-            {/* Content */}
-            <div className="p-6 pt-4">
+            {/* Content (Scrollable if needed) */}
+            <div className="p-6 pt-4 overflow-y-auto">
                 <p className="text-neutral-700 dark:text-neutral-200 text-sm leading-relaxed mb-6 font-medium">
                     {step.content}
                 </p>
 
-                <div className="flex items-center justify-between mt-2">
+                <div className="flex items-center justify-between mt-2 pt-2">
                     <button 
                         onClick={onClose}
                         className="text-xs font-bold text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors"
