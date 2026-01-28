@@ -21,6 +21,41 @@ const App: React.FC = () => {
     }
   }, [darkMode]);
 
+  // Security: Block Inspect Element and Context Menu
+  useEffect(() => {
+    const handleContextMenu = (e: MouseEvent) => {
+      e.preventDefault();
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Block F12
+      if (e.key === 'F12') {
+        e.preventDefault();
+        return;
+      }
+
+      // Block Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+      if (e.ctrlKey && e.shiftKey && ['I', 'J', 'C'].includes(e.key.toUpperCase())) {
+        e.preventDefault();
+        return;
+      }
+
+      // Block Ctrl+U (View Source)
+      if (e.ctrlKey && e.key.toUpperCase() === 'U') {
+        e.preventDefault();
+        return;
+      }
+    };
+
+    document.addEventListener('contextmenu', handleContextMenu);
+    document.addEventListener('keydown', handleKeyDown);
+
+    return () => {
+      document.removeEventListener('contextmenu', handleContextMenu);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
+
   // Check Local Storage for Tour
   useEffect(() => {
     const hasSeenTour = localStorage.getItem('hasSeenCashbackTour');
