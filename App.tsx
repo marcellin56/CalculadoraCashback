@@ -132,16 +132,16 @@ const App: React.FC = () => {
         <header className="glass relative shadow-lg shadow-black/5 dark:shadow-black/20 rounded-full px-2 py-2 max-w-4xl w-full flex items-center justify-between backdrop-blur-md">
           
           {/* Logo Area (Left) */}
-          <div className="flex items-center gap-4 pl-3">
-            {/* Platform Logo */}
-            <div className="h-8 md:h-9 w-auto flex items-center justify-center">
+          <div className="flex items-center gap-2 pl-2 sm:gap-4 sm:pl-3">
+            {/* Platform Logo - Responsive Size */}
+            <div className="h-6 md:h-9 w-auto flex items-center justify-center transition-all">
                <img src={darkMode ? config.logoUrls.dark : config.logoUrls.light} alt="Platform Logo" className="h-full w-auto object-contain" />
             </div>
           </div>
           
-          {/* ConvertaX Logo (Center Absolute) */}
-          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div className="h-5 md:h-6 w-auto flex items-center justify-center opacity-90 transition-opacity hover:opacity-100">
+          {/* ConvertaX Logo (Center Absolute) - Responsive Size */}
+          <div className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 z-10 pointer-events-none">
+            <div className="h-4 md:h-6 w-auto flex items-center justify-center opacity-90 transition-opacity hover:opacity-100">
                <img 
                   src={darkMode ? 'https://i.imgur.com/qQtOrAS.png' : 'https://i.imgur.com/o3GZGTk.png'} 
                   alt="ConvertaX" 
@@ -151,17 +151,20 @@ const App: React.FC = () => {
           </div>
           
           {/* Controls (Right) */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2">
              <div className="relative" id="tour-platform-selector">
                 <button 
                   onClick={() => setIsPlatformMenuOpen(!isPlatformMenuOpen)}
                   onBlur={() => setTimeout(() => setIsPlatformMenuOpen(false), 200)}
-                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-sm font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200/50 dark:hover:bg-neutral-700/50 transition-all hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2 px-3 sm:px-4 py-2 rounded-full bg-neutral-100/50 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-sm font-semibold text-neutral-700 dark:text-neutral-200 hover:bg-neutral-200/50 dark:hover:bg-neutral-700/50 transition-all hover:scale-105 active:scale-95"
                 >
-                    <span className="hidden sm:inline">Plataforma:</span>
-                    <span className="font-bold text-neutral-900 dark:text-white">
+                    <span className="hidden md:inline">Plataforma:</span>
+                    {/* Hide Platform Name on Mobile to prevent overlap */}
+                    <span className="font-bold text-neutral-900 dark:text-white hidden sm:inline">
                       <PlatformName platform={platform} />
                     </span>
+                    {/* Show simple text or just icon on mobile */}
+                    <span className="font-bold text-xs sm:hidden">Trocar</span>
                     <Layers className="w-4 h-4 text-neutral-400" />
                 </button>
                 
