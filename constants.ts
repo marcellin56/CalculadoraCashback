@@ -98,7 +98,7 @@ export const EXCLUDED_GAMES_SPORTS = [
 export const PLATFORMS: Record<Platform, PlatformConfig> = {
   '7K': {
     id: '7K',
-    name: '7K.bet',
+    name: '7CASHBACK',
     logoUrls: {
       light: 'https://i.imgur.com/EEWIzwj.png',
       dark: 'https://i.imgur.com/t5n650i.png'
@@ -124,7 +124,7 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   },
   'Cassino': {
     id: 'Cassino',
-    name: 'Cassino.bet.br',
+    name: 'CCASHBACK',
     logoUrls: {
       light: 'https://i.imgur.com/Le0QBjN.png',
       dark: 'https://i.imgur.com/d1mr33O.png'
@@ -150,7 +150,7 @@ export const PLATFORMS: Record<Platform, PlatformConfig> = {
   },
   'Vera': {
     id: 'Vera',
-    name: 'Vera.bet',
+    name: 'VCASHBACK',
     logoUrls: {
       light: 'https://i.imgur.com/bIjTiVJ.png',
       dark: 'https://i.imgur.com/pcOxTap.png'

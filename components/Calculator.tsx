@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { calculateCashback, formatCurrency, formatPercent } from '../services/cashbackService';
-import { Calculator as CalcIcon, DollarSign, Wallet, Scale, ArrowRight } from 'lucide-react';
+import { Calculator as CalcIcon, DollarSign, Wallet, Scale, ArrowRight, TrendingDown } from 'lucide-react';
 import { PLATFORMS } from '../constants';
 import { CashbackMode, Platform, CashbackResult } from '../types';
 
@@ -19,7 +19,6 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
   const [result, setResult] = useState<CashbackResult | null>(null);
   const config = PLATFORMS[platform];
 
-  // Reset when switching modes or platforms
   useEffect(() => {
     setValues({ lossAmount: '' });
     setReceivedInput('');
@@ -27,10 +26,8 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
   }, [mode, platform]);
 
   useEffect(() => {
-    // Normalize input by replacing comma with dot for calculation
     const normalizedLoss = values.lossAmount.replace(',', '.');
     const loss = parseFloat(normalizedLoss) || 0;
-
     if (loss > 0) {
       setResult(calculateCashback(loss, mode, platform));
     } else {
@@ -40,8 +37,6 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { value } = e.target;
-    // Allow numbers and either a dot or a comma (but only one)
-    // Regex: Start, digits, optional group of (dot or comma AND digits), End.
     if (value === '' || /^\d*([.,]\d*)?$/.test(value)) {
       setValues({ lossAmount: value });
     }
@@ -54,179 +49,150 @@ export const Calculator: React.FC<CalculatorProps> = ({ mode, platform }) => {
     }
   };
 
-  const getPayoutTime = () => {
-      switch(mode) {
-          case 'weekly': return `Crédito: ${config.rules.weekly.deliveryText}`;
-          case 'sports': return 'Crédito: Terça-feira (até 14h)';
-          case 'daily': return `Crédito: ${config.rules.daily.deliveryText}`;
-          case 'aviator': return `Crédito: ${config.rules.daily.deliveryText}`;
-          default: return '';
-      }
-  };
-
   const getDisclaimer = () => {
-      if (mode === 'sports') {
-          return "Ferramenta interna: Insira o saldo negativo apenas de apostas Múltiplas (Odds 3.0 - 1000) finalizadas na semana.";
-      }
-      if (mode === 'aviator') {
-          return "Ferramenta interna: Insira o saldo negativo apurado EXCLUSIVAMENTE em jogos 'Aviator Crash'. Outros jogos de crash não contam.";
-      }
-      return "Ferramenta interna: O cálculo assume que o valor inserido já é o GGR Negativo (Perdas - Ganhos) validado.";
+      if (mode === 'sports') return "Apenas apostas Múltiplas (Odds 3.0+).";
+      if (mode === 'aviator') return "Apenas perdas no 'Aviator Crash'.";
+      return "Cálculo sobre Saldo Negativo (GGR).";
   };
 
-  // Divergence Calculation
-  // Normalize received input as well
   const normalizedReceived = receivedInput.replace(',', '.');
   const receivedAmount = parseFloat(normalizedReceived) || 0;
-  
-  // Floating point precision handling for difference
   const diff = result ? result.cashbackAmount - receivedAmount : 0;
-  // Use high precision to capture exact difference without 2-decimal rounding
-  // Math.max(0, ...) ensures we don't show negative if they paid MORE than needed.
   const shouldCredit = Math.max(0, parseFloat(diff.toFixed(6)));
-  
   const isDivergent = result && result.cashbackAmount > 0 && receivedInput !== '' && receivedAmount < result.cashbackAmount;
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-      {/* Input Section */}
-      <div className="space-y-6">
-        <div className="bg-white dark:bg-neutral-800 p-8 rounded-2xl shadow-lg border border-neutral-100 dark:border-neutral-700 h-full flex flex-col justify-center">
-          <h2 className="text-xl font-bold mb-8 text-neutral-800 dark:text-white flex items-center gap-2">
-            <CalcIcon className="w-6 h-6 text-brand" />
-            Dados do Jogador
-          </h2>
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      {/* Input Section - Left Side */}
+      <div className="lg:col-span-5 flex flex-col h-full">
+        <div className="glass rounded-3xl p-6 md:p-8 h-full flex flex-col relative overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+          <div className="absolute top-0 right-0 w-32 h-32 bg-brand/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
           
-          <div id="tour-input-loss">
-            <label className="block text-base font-medium text-neutral-600 dark:text-neutral-400 mb-3">
-              Saldo Negativo (Prejuízo Apurado)
+          <div className="flex items-center gap-3 mb-8">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-neutral-100 to-neutral-200 dark:from-neutral-800 dark:to-neutral-900 flex items-center justify-center shadow-inner">
+                <CalcIcon className="w-5 h-5 text-brand" />
+            </div>
+            <div>
+                <h2 className="text-lg font-bold text-neutral-900 dark:text-white leading-tight">Dados da Perda</h2>
+                <p className="text-xs text-neutral-500">Informe o valor para calcular</p>
+            </div>
+          </div>
+          
+          <div id="tour-input-loss" className="flex-1 flex flex-col justify-center">
+            <label className="text-sm font-semibold text-neutral-600 dark:text-neutral-400 mb-2 block">
+              Saldo Negativo (R$)
             </label>
             <div className="relative group">
-              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-xl group-focus-within:text-brand transition-colors">R$</span>
               <input
                 type="text"
-                name="lossAmount"
                 inputMode="decimal"
                 value={values.lossAmount}
                 onChange={handleInputChange}
                 placeholder="0,00"
-                className="w-full pl-14 pr-4 py-4 rounded-xl bg-neutral-50 dark:bg-neutral-900 border-2 border-neutral-200 dark:border-neutral-700 focus:border-brand focus:ring-0 outline-none transition-all text-2xl font-bold text-neutral-800 dark:text-white placeholder:text-neutral-300 dark:placeholder:text-neutral-700"
+                className="peer w-full bg-transparent text-4xl md:text-5xl font-black text-neutral-900 dark:text-white placeholder-neutral-200 dark:placeholder-neutral-800 outline-none py-2 border-b-2 border-neutral-200 dark:border-neutral-800 focus:border-brand transition-all"
+                autoFocus
               />
+              <span className="absolute right-0 top-1/2 -translate-y-1/2 text-neutral-300 dark:text-neutral-700 peer-focus:text-brand transition-colors">
+                  <TrendingDown className="w-6 h-6" />
+              </span>
             </div>
-            <p className="mt-3 text-sm text-neutral-400 dark:text-neutral-500">
-              Insira o valor absoluto da perda do jogador (ex: 500,00).
-            </p>
+            <p className="text-xs text-neutral-400 mt-2">Digite o valor sem o sinal de menos.</p>
           </div>
 
-          <div className="mt-8 bg-brand/5 dark:bg-brand/5 p-4 rounded-xl border border-brand/10 text-sm text-brand-dark dark:text-brand-light flex items-start gap-3">
-             <div className="p-1 bg-brand/20 rounded-md shrink-0">
-                <Wallet className="w-4 h-4" />
-             </div>
-             <p className="leading-relaxed opacity-90">
+          <div className="mt-8 pt-6 border-t border-neutral-100 dark:border-neutral-800">
+             <div className="flex items-center gap-3 text-xs font-medium text-neutral-500 bg-neutral-50 dark:bg-neutral-900/50 p-3 rounded-xl">
+                <Wallet className="w-4 h-4 text-brand" />
                 {getDisclaimer()}
-             </p>
+             </div>
           </div>
         </div>
       </div>
 
-      {/* Results Section */}
-      <div className="space-y-6" id="tour-results-area">
+      {/* Results Section - Right Side */}
+      <div className="lg:col-span-7" id="tour-results-area">
          {result ? (
-            <div className="flex flex-col h-full bg-white dark:bg-neutral-800 p-8 rounded-2xl shadow-lg border-2 border-brand/20 relative overflow-hidden">
-                
-                {/* Header Result */}
-                <div className="text-center mb-6">
-                    <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-xs font-bold mb-4 uppercase tracking-wider bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400">
-                        Base de Cálculo
-                    </span>
+            <div className="h-full flex flex-col relative">
+                {/* Main Ticket Card */}
+                <div className="glass rounded-3xl overflow-hidden shadow-xl border-0 flex flex-col h-full animate-in fade-in slide-in-from-right-4 duration-500">
                     
-                    <h3 className="text-4xl font-bold text-neutral-800 dark:text-white">
-                         {formatCurrency(result.lossAmount)}
-                    </h3>
-                </div>
+                    {/* Active Header - Uses textOnBrand for labels, but forces white for value on 7K */}
+                    <div className={`relative p-8 text-center overflow-hidden ${result.cashbackAmount > 0 ? `bg-brand ${config.textOnBrand}` : 'bg-neutral-200 dark:bg-neutral-800 text-neutral-500'}`}>
+                        {result.cashbackAmount > 0 && (
+                            <div className="absolute inset-0 opacity-30 bg-[url('https://www.transparenttextures.com/patterns/cubes.png')] mix-blend-overlay"></div>
+                        )}
+                        <div className="relative z-10">
+                            <h3 className="text-sm font-bold uppercase tracking-widest opacity-80 mb-2">Cashback Disponível</h3>
+                            <h2 className={`text-5xl md:text-6xl font-black tracking-tight drop-shadow-lg ${platform === '7K' ? 'text-white' : ''}`}>
+                                {formatCurrency(result.cashbackAmount)}
+                            </h2>
+                            {result.cashbackAmount > 0 && (
+                                <div className={`mt-4 inline-flex items-center gap-2 px-3 py-1 rounded-full backdrop-blur-md border text-xs font-bold ${platform === '7K' || platform === 'Vera' ? 'bg-black/10 border-black/10 text-neutral-900' : 'bg-white/20 border-white/20 text-white'}`}>
+                                    <span className={`w-2 h-2 rounded-full animate-pulse ${platform === '7K' || platform === 'Vera' ? 'bg-neutral-900' : 'bg-green-400'}`}></span>
+                                    {formatPercent(result.appliedPercent)} aplicado sobre {formatCurrency(result.lossAmount)}
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
-                {/* Cashback Display */}
-                <div className={`relative overflow-hidden rounded-2xl p-6 transition-all duration-500 mb-6 ${result.cashbackAmount > 0 ? `bg-gradient-to-br from-brand to-brand-dark ${config.textOnBrand} shadow-brand/40 shadow-xl` : 'bg-neutral-100 dark:bg-neutral-700 text-neutral-400'}`}>
-                    <div className="relative z-10 flex flex-col items-center">
-                        <p className="text-xs font-bold uppercase tracking-widest mb-1 opacity-80">Cashback Total Devido</p>
-                        <h2 className="text-4xl font-black tracking-tight drop-shadow-sm">
-                            {formatCurrency(result.cashbackAmount)}
-                        </h2>
-                        
+                    {/* Receipt Body */}
+                    <div className="bg-white dark:bg-neutral-900 flex-1 p-8 flex flex-col relative">
+                        {/* Perforated Edge Effect */}
+                        <div className="absolute top-0 left-0 right-0 h-4 -mt-2 bg-[radial-gradient(circle,transparent_50%,var(--bg-card)_50%)] bg-[length:16px_16px] [background-position-y:-8px] dark:[--bg-card:#171717] [--bg-card:#ffffff]"></div>
+
+                        {/* Divergence Calculator */}
                         {result.cashbackAmount > 0 && (
-                             <div className={`mt-2 inline-flex items-center gap-2 ${config.textOnBrand === 'text-white' ? 'bg-white/20 border-white/20' : 'bg-black/10 border-black/10'} px-3 py-1 rounded-full text-xs font-bold backdrop-blur-sm border`}>
-                                {formatPercent(result.appliedPercent)} aplicado
-                             </div>
+                            <div className="mt-2">
+                                <div className="flex items-center gap-2 mb-4 text-neutral-400 font-bold text-xs uppercase tracking-wider">
+                                    <Scale className="w-4 h-4" /> Calculadora de Diferença
+                                </div>
+                                
+                                <div className="bg-neutral-100 dark:bg-black/40 rounded-2xl p-2 flex items-center justify-between border border-neutral-300 dark:border-neutral-700 shadow-inner">
+                                    <div className="flex-1 px-4 py-2">
+                                        <label className="block text-[10px] font-bold text-neutral-500 uppercase">Já Pago</label>
+                                        <div className="flex items-center gap-1">
+                                            <span className="text-neutral-500 font-semibold">R$</span>
+                                            <input 
+                                                type="text"
+                                                inputMode="decimal"
+                                                placeholder="0,00"
+                                                value={receivedInput}
+                                                onChange={handleReceivedChange}
+                                                className="w-full bg-transparent font-bold text-lg text-neutral-900 dark:text-neutral-200 outline-none placeholder-neutral-400"
+                                            />
+                                        </div>
+                                    </div>
+                                    
+                                    <div className="text-neutral-400 dark:text-neutral-600">
+                                        <ArrowRight className="w-6 h-6" />
+                                    </div>
+
+                                    {/* Updated Result Box */}
+                                    <div className={`flex-1 px-4 py-3 rounded-xl text-right transition-colors ${isDivergent ? 'bg-red-500/10 text-red-600 dark:text-red-400' : 'bg-brand/10 text-brand-dark'}`}>
+                                        <label className="block text-[10px] font-bold opacity-70 uppercase">Pagar</label>
+                                        <span className="text-xl font-black">{formatCurrency(shouldCredit)}</span>
+                                    </div>
+                                </div>
+                            </div>
                         )}
-                        
-                         {/* Background decoration */}
-                        {result.cashbackAmount > 0 && (
-                            <>
-                                <div className={`absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 rounded-full blur-2xl ${config.textOnBrand === 'text-white' ? 'bg-white/20' : 'bg-black/10'}`}></div>
-                                <div className={`absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 rounded-full blur-2xl ${config.textOnBrand === 'text-white' ? 'bg-black/20' : 'bg-white/20'}`}></div>
-                            </>
-                        )}
+
+                        <div className="mt-auto pt-6 text-center">
+                            <p className="text-xs font-medium text-neutral-400">
+                                Prazo: {mode === 'weekly' ? config.rules.weekly.deliveryText : config.rules.daily.deliveryText}
+                            </p>
+                        </div>
                     </div>
                 </div>
-
-                {/* Divergence Section */}
-                {result.cashbackAmount > 0 && (
-                  <div className="mt-auto border-t border-neutral-100 dark:border-neutral-700 pt-6">
-                      <div className="flex items-center gap-2 mb-3 text-neutral-500 dark:text-neutral-400">
-                          <Scale className="w-4 h-4" />
-                          <h4 className="text-xs font-bold uppercase tracking-wide">Cálculo de Divergência</h4>
-                      </div>
-                      
-                      <div className="grid grid-cols-7 gap-3 items-end">
-                          <div className="col-span-3">
-                              <label className="block text-xs font-medium text-neutral-400 mb-1.5 ml-1">
-                                  Valor Recebido
-                              </label>
-                              <div className="relative">
-                                  <span className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400 font-bold text-xs">R$</span>
-                                  <input 
-                                      type="text"
-                                      inputMode="decimal"
-                                      placeholder="0,00"
-                                      value={receivedInput}
-                                      onChange={handleReceivedChange}
-                                      className="w-full pl-9 pr-3 py-2 text-sm font-bold rounded-lg bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 focus:border-brand focus:ring-0 outline-none text-neutral-800 dark:text-white"
-                                  />
-                              </div>
-                          </div>
-                          
-                          <div className="col-span-1 flex justify-center pb-2 text-neutral-300">
-                              <ArrowRight className="w-5 h-5" />
-                          </div>
-
-                          <div className={`col-span-3 rounded-xl p-2.5 border text-center transition-all ${isDivergent ? 'bg-red-50 border-red-100 dark:bg-red-900/20 dark:border-red-900/30' : 'bg-neutral-50 border-neutral-100 dark:bg-neutral-900 dark:border-neutral-800'}`}>
-                              <span className="block text-[10px] font-bold uppercase text-neutral-400 mb-0.5">
-                                  Restante a Creditar
-                              </span>
-                              <span className={`text-lg font-black ${isDivergent ? 'text-red-600 dark:text-red-400' : 'text-neutral-300 dark:text-neutral-600'}`}>
-                                  {formatCurrency(shouldCredit)}
-                              </span>
-                          </div>
-                      </div>
-                  </div>
-                )}
-                
-                <div className="mt-6 text-center">
-                    <p className="text-xs text-neutral-400 dark:text-neutral-500">
-                        {getPayoutTime()}
-                    </p>
-                </div>
-
             </div>
          ) : (
-             <div className="h-full flex items-center justify-center bg-neutral-50 dark:bg-neutral-800/50 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-700 text-neutral-400 p-12 text-center transition-all">
-                <div className="max-w-xs">
-                    <div className="w-20 h-20 bg-neutral-200 dark:bg-neutral-700 rounded-full flex items-center justify-center mx-auto mb-6">
-                        <DollarSign className="w-10 h-10 opacity-50 text-neutral-500 dark:text-neutral-400" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-neutral-600 dark:text-neutral-300 mb-2">Aguardando Valor</h3>
-                    <p className="text-sm">Preencha o campo de saldo negativo para visualizar o cálculo do benefício.</p>
+             <div className="h-full min-h-[400px] glass rounded-3xl flex flex-col items-center justify-center p-12 text-center border-2 border-dashed border-neutral-200 dark:border-neutral-800/50">
+                <div className="w-24 h-24 bg-neutral-100 dark:bg-neutral-800 rounded-full flex items-center justify-center mb-6 shadow-inner">
+                    <DollarSign className="w-10 h-10 text-neutral-300 dark:text-neutral-600" />
                 </div>
+                <h3 className="text-xl font-bold text-neutral-700 dark:text-neutral-200 mb-2">Aguardando Dados</h3>
+                <p className="text-sm text-neutral-500 max-w-xs mx-auto">
+                    Preencha o saldo negativo ao lado para gerar o cálculo detalhado do benefício.
+                </p>
              </div>
          )}
       </div>

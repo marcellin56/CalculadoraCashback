@@ -15,6 +15,10 @@ interface ProductTourProps {
   onComplete: () => void;
 }
 
+// Fixed color for the tutorial elements
+const TOUR_COLOR = '#13DA87';
+const TOUR_COLOR_HOVER = '#0FB86F';
+
 export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose, onComplete }) => {
   const [currentStep, setCurrentStep] = useState(0);
   const [targetRect, setTargetRect] = useState<DOMRect | null>(null);
@@ -112,7 +116,10 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
               <div className="relative w-full max-w-4xl h-full flex flex-col items-center justify-center p-6">
                   
                   {/* Background Glow */}
-                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] bg-brand/20 rounded-full blur-[100px] pointer-events-none animate-pulse"></div>
+                  <div 
+                    className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[500px] h-[500px] rounded-full blur-[100px] pointer-events-none animate-pulse"
+                    style={{ backgroundColor: `${TOUR_COLOR}33` }} // 33 is approx 20% hex opacity
+                  ></div>
 
                   {/* Speech Bubble with Pop Animation */}
                   <div 
@@ -122,14 +129,20 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                       {/* Tail */}
                       <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 w-8 h-8 bg-white rotate-45 transform border-b-4 border-r-4 border-white/50"></div>
                       
-                      <h3 className="text-3xl font-black text-brand mb-3 tracking-tight drop-shadow-sm">{step.title}</h3>
+                      <h3 
+                        className="text-3xl font-black mb-3 tracking-tight drop-shadow-sm"
+                        style={{ color: TOUR_COLOR }}
+                      >
+                        {step.title}
+                      </h3>
                       <p className="text-lg text-neutral-800 font-bold leading-relaxed mb-6">
                           {step.content}
                       </p>
                       
                       <button 
                           onClick={handleNext}
-                          className="w-full sm:w-auto px-8 py-4 bg-brand hover:bg-brand-dark text-white rounded-2xl font-black text-xl transition-all transform hover:scale-105 shadow-xl shadow-brand/40 flex items-center justify-center gap-2 mx-auto active:scale-95"
+                          style={{ backgroundColor: TOUR_COLOR }}
+                          className="w-full sm:w-auto px-8 py-4 text-white rounded-2xl font-black text-xl transition-all transform hover:scale-105 shadow-xl flex items-center justify-center gap-2 mx-auto active:scale-95 hover:brightness-95"
                       >
                           Começar
                           <ChevronRight className="w-6 h-6" />
@@ -222,9 +235,9 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
       <div 
         className="fixed inset-0 z-[90] transition-all duration-300 ease-in-out pointer-events-none"
         style={{
-          boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 4px var(--brand-light)`, // Glow ring using brand-light
-          border: '2px solid var(--brand-default)', // Solid border using brand color
-          borderRadius: '12px', // Generic rounded corners for most UI elements
+          boxShadow: `0 0 0 9999px rgba(0, 0, 0, 0.75), 0 0 0 4px ${TOUR_COLOR}80`, // Glow ring
+          border: `2px solid ${TOUR_COLOR}`, // Solid border
+          borderRadius: '12px',
           top: targetRect!.top - 4,
           left: targetRect!.left - 4,
           width: targetRect!.width + 8,
@@ -237,19 +250,19 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
           <svg className="fixed inset-0 z-[95] pointer-events-none w-full h-full">
               <defs>
                   <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                    <polygon points="0 0, 10 3.5, 0 7" fill="var(--brand-default)" />
+                    <polygon points="0 0, 10 3.5, 0 7" fill={TOUR_COLOR} />
                   </marker>
               </defs>
               <path 
                 d={connectionPath} 
-                stroke="var(--brand-default)" 
+                stroke={TOUR_COLOR} 
                 strokeWidth="2" 
                 fill="none" 
                 strokeDasharray="4 2"
                 className="animate-pulse"
                 markerEnd="url(#arrowhead)"
               />
-              <circle cx={targetRect!.left + (targetRect!.width / 2)} cy={isPlacedBelow ? targetRect!.bottom : targetRect!.top} r="3" fill="var(--brand-default)" />
+              <circle cx={targetRect!.left + (targetRect!.width / 2)} cy={isPlacedBelow ? targetRect!.bottom : targetRect!.top} r="3" fill={TOUR_COLOR} />
           </svg>
       )}
 
@@ -264,9 +277,15 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
             maxWidth: `calc(100vw - ${VIEWPORT_PADDING * 2}px)`,
         }}
       >
-        <div className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto border-2 border-brand max-h-[80vh] flex-shrink-0">
+        <div 
+            className="relative bg-white dark:bg-neutral-800 rounded-2xl shadow-2xl p-0 overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300 w-full mx-auto max-h-[80vh] flex-shrink-0"
+            style={{ borderColor: TOUR_COLOR, borderWidth: '2px' }}
+        >
             {/* Header */}
-            <div className="p-5 rounded-t-xl border-b flex-shrink-0 bg-brand border-brand/10">
+            <div 
+                className="p-5 rounded-t-lg border-b flex-shrink-0"
+                style={{ backgroundColor: TOUR_COLOR, borderColor: `${TOUR_COLOR}33` }}
+            >
                 <div className="flex items-center justify-between mb-2">
                    <h3 className="text-xl font-bold text-white">{step.title}</h3>
                    <span className="text-xs font-bold text-white uppercase tracking-wider bg-white/20 px-2 py-1 rounded backdrop-blur-sm">
@@ -300,7 +319,8 @@ export const ProductTour: React.FC<ProductTourProps> = ({ steps, isOpen, onClose
                         )}
                         <button 
                             onClick={handleNext}
-                            className="flex items-center gap-2 px-6 py-2 text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform active:scale-95 bg-brand hover:bg-brand-dark"
+                            style={{ backgroundColor: TOUR_COLOR }}
+                            className="flex items-center gap-2 px-6 py-2 text-white rounded-lg text-sm font-bold transition-all shadow-md hover:shadow-lg transform active:scale-95 hover:brightness-95"
                         >
                             {isLastStep ? 'Concluir' : 'Próximo'}
                             {isLastStep ? <Check className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
